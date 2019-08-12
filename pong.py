@@ -2,8 +2,41 @@ import pygame
 from multiprocessing.connection import Client
 WINDOWXSIZE = 800
 WINDOWYSIZE = 500
-THRESHSCORE = 5
+THRESHSCORE = 500
 
+
+class bot(object):
+    def __init__(self, xpos, ypos, colour, playerName, client):
+        self.xpos = xpos
+        self.ypos = ypos
+        self.playerName = playerName
+
+        self.client = client
+
+        self.paddleWidth = 20
+        self.paddleHeight = 55
+        self.velocity = 5
+
+        self.colour = colour
+
+    def movePlayer(self, command):
+        if (command == "ok"):
+            return
+        if (command == "up"):
+            if self.ypos - self.velocity <= 0:
+                self.ypos = 0
+            else:
+                self.ypos -= self.velocity
+        elif (command == "down"):
+            if self.ypos + self.velocity + self.paddleHeight >= WINDOWYSIZE:
+                self.ypos = WINDOWYSIZE - self.paddleHeight
+            else:
+                self.ypos += self.velocity
+
+    def drawPlayer(self, window):
+        self.client.send("Name:{} xPos:{} yPos:{} width:{} height:{}".format(self.playerName, self.xpos, self.ypos, self.paddleWidth, self.paddleHeight))
+        self.client.recv()
+        pygame.draw.rect(window, self.colour, (self.xpos, self.ypos, self.paddleWidth, self.paddleHeight))
 
 class player(object):
     def __init__(self, xpos, ypos, upKey, downKey, colour, playerName, client):
@@ -92,7 +125,6 @@ class ball(object):
         self.xpos = WINDOWXSIZE / 2
         self.ypos = WINDOWYSIZE / 2
 
-
     def p1Detect(self, player):
         '''
         This function detects whether the ball has collided with P1.
@@ -164,13 +196,15 @@ class ball(object):
             self.xpos = player.paddleWidth + 1
         if self.xVel <= -9:
             self.xVel = -9
+
     def drawBall(self, window):
         '''
         This function draws the ball and outputs the position to the command line if machineOutput is enabled.
         '''
         self.client.send("Ball: xPos:{} yPos:{} width:{} height:{}".format(self.xpos, self.ypos, self.width, self.height))
-        self.client.recv()
+        response = self.client.recv()
         pygame.draw.rect(window, self.colour, (self.xpos, self.ypos, self.width, self.height))
+        return response
 
 def main():
 
@@ -182,7 +216,7 @@ def main():
     pygame.display.set_caption("Pong")
     colour1 = (255,100,100)
     colour2 = (100,255,255)
-    player1 = player(WINDOWXSIZE - 20, WINDOWYSIZE/2, pygame.K_UP, pygame.K_DOWN, colour1, "Player1", c)
+    player1 = bot(WINDOWXSIZE - 20, WINDOWYSIZE/2, colour1, "Player1", c)
     player2 = player(0, WINDOWYSIZE/2, pygame.K_w, pygame.K_s, colour2, "Player2", c)
     ball1 = ball(-4, win, c)
 
@@ -206,10 +240,9 @@ def main():
         win.blit(text, textRect)
         player1.drawPlayer(win)
         player2.drawPlayer(win)
-        ball1.drawBall(win)
-
+        response = ball1.drawBall(win)
         keys = pygame.key.get_pressed()
-        player1.movePlayer(keys)
+        player1.movePlayer(response)
         player2.movePlayer(keys)
         ball1.moveBall(player1, player2)
         if keys[pygame.K_q]:

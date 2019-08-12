@@ -8,80 +8,72 @@ import pyautogui
 class Opponent(object):
     """docstring for Opponent."""
     def __init__(self, msgParsed):
-        self.yPos = float(msgParsed[2].split(":")[1])
-        self.xPos = float(msgParsed[1].split(":")[1])
-        self.width = float(msgParsed[3].split(":")[1])
-        self.height = float(msgParsed[4].split(":")[1])
+        self.yPos = int(float(msgParsed[2].split(":")[1]))
+        self.xPos = int(float(msgParsed[1].split(":")[1]))
+        self.width = int(float(msgParsed[3].split(":")[1]))
+        self.height = int(float(msgParsed[4].split(":")[1]))
 
     def update(self, msgParsed):
-        self.yPos = float(msgParsed[2].split(":")[1])
-        self.xPos = float(msgParsed[1].split(":")[1])
-        self.width = float(msgParsed[3].split(":")[1])
-        self.height = float(msgParsed[4].split(":")[1])
+        self.yPos = int(float(msgParsed[2].split(":")[1]))
+        self.xPos = int(float(msgParsed[1].split(":")[1]))
+        self.width = int(float(msgParsed[3].split(":")[1]))
+        self.height = int(float(msgParsed[4].split(":")[1]))
 
 class Player(object):
     """docstring for Player."""
     def __init__(self, msgParsed):
-        self.yPos = float(msgParsed[2].split(":")[1])
-        self.xPos = float(msgParsed[1].split(":")[1])
-        self.width = float(msgParsed[3].split(":")[1])
-        self.height = float(msgParsed[4].split(":")[1])
-        self.up = True
-        self.down = False
-        self.counter = 0
+        self.yPos = int(float(msgParsed[2].split(":")[1]))
+        self.xPos = int(float(msgParsed[1].split(":")[1]))
+        self.width = int(float(msgParsed[3].split(":")[1]))
+        self.height = int(float(msgParsed[4].split(":")[1]))
 
     def update(self, msgParsed):
-        self.yPos = float(msgParsed[2].split(":")[1])
-        self.xPos = float(msgParsed[1].split(":")[1])
-        self.width = float(msgParsed[3].split(":")[1])
-        self.height = float(msgParsed[4].split(":")[1])
+        self.yPos = int(float(msgParsed[2].split(":")[1]))
+        self.xPos = int(float(msgParsed[1].split(":")[1]))
+        self.width = int(float(msgParsed[3].split(":")[1]))
+        self.height = int(float(msgParsed[4].split(":")[1]))
 
-    def move(self, ball):
-        self.counter += 1
-        if self.counter > 30:
-            if ball.yPos < self.yPos and not self.up:
-                pyautogui.keyDown("up")
-                self.up = True
-            elif ball.yPos >= self.yPos and self.up:
-                pyautogui.keyUp("up")
-                self.up = False
-            self.counter = 0
+    def move(self, ball, conncection):
+
+        print ball.yPos, "    ", self.yPos
+        if ball.yPos + 5 < self.yPos:
+            import time
+            conncection.send("up")
+        elif ball.yPos >= self.yPos + 5:
+            conncection.send("down")
+        else:
+            conncection.send("ok")
+
 
 class Ball(object):
     """docstring for Opponent."""
     def __init__(self, msgParsed):
-        self.yPos = float(msgParsed[2].split(":")[1])
-        self.xPos = float(msgParsed[1].split(":")[1])
-        self.width = float(msgParsed[3].split(":")[1])
-        self.height = float(msgParsed[4].split(":")[1])
+        self.yPos = int(float(msgParsed[2].split(":")[1]))
+        self.xPos = int(float(msgParsed[1].split(":")[1]))
+        self.width = int(float(msgParsed[3].split(":")[1]))
+        self.height = int(float(msgParsed[4].split(":")[1]))
 
     def update(self, msgParsed):
-        self.yPos = float(msgParsed[2].split(":")[1])
-        self.xPos = float(msgParsed[1].split(":")[1])
-        self.width = float(msgParsed[3].split(":")[1])
-        self.height = float(msgParsed[4].split(":")[1])
+        self.yPos = int(float(msgParsed[2].split(":")[1]))
+        self.xPos = int(float(msgParsed[1].split(":")[1]))
+        self.width = int(float(msgParsed[3].split(":")[1]))
+        self.height = int(float(msgParsed[4].split(":")[1]))
 # client
 def controller(conn, player1, player2, ball):
 
     while True:
         try:
             msg = conn.recv()
-            #print msg        # this just echos the value back, replace with your custom logic
+            #print msg 
             if "Name:Player1" in msg:
                 player1.update(msg.split(" "))
             elif "Name:Player2" in msg:
                 player2.update(msg.split(" "))
             elif "Ball" in msg:
                 ball.update(msg.split(" "))
-            conn.send("ok")
-            player1.move(ball)
+            player1.move(ball, conn)
         except:
-            pass
-
-
-
-
-
+            conn.send("ok")
 
 # server
 def mother(address):
